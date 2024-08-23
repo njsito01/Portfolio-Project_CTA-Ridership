@@ -28,7 +28,7 @@ The following tools were used on this analysis:
 My first step to cleaning the data was to ensure that I did not make any changes to the original data.  To do this, I created two new tables, and named them to both avoid confusion, as well as to be easier to reference.
 
 <details>
-  <summary>Expand for the code used to create new "working tables"</summary>
+  <summary><sub>Expand for the code used to create new "working tables"</sub></summary>
 
 ```SQL
 # Original Data
@@ -60,7 +60,9 @@ CREATE TABLE cta_daily_boarding AS (
 Next, I identified any fields with the wrong data types, and updated them to appropriate types:
 
 <details>
-   <summary>_Expand for the code used to correct data types_</summary>
+	
+   <summary><sub>Expand for the code used to correct data types</sub></summary>
+   
   
 ```SQL
 # CTA daily boarding table - Updating data types
@@ -86,7 +88,9 @@ MODIFY COLUMN service_date DATE
 My next step was to rename the columns to a more usable format
 
 <details>
-  <summary>Expand to see the code used to update column names</summary>
+	
+  <summary><sub>Expand to see the code used to update column names</sub></summary>
+
 
 ```SQL
 # Updating column names
