@@ -124,10 +124,30 @@ WHERE row_cnt > 1
 ```
 </details>
 
+After identifying some duplicate rows, I created a new "working table" and removed those rows:
+
+<details>
+	<summary><sub>Expand</sub></summary>
 
 
+```SQL
+ -- Creating a new working table with row_numbers, for removing duplicates
+CREATE TABLE cta_daily_boarding_v2 AS (
+SELECT *,
+ROW_NUMBER() OVER(PARTITION BY service_date ORDER BY service_date) AS row_cnt
+FROM cta_daily_boarding
+)
+;
 
-My next step was to rename the columns to a more usable format
+DELETE FROM cta_daily_boarding_v2
+WHERE row_cnt > 1
+;
+```
+
+</details>
+
+
+Next, I moved on to the weather data table, and the first step was to rename the columns to a more usable format
 
 <details>
 	
@@ -197,6 +217,77 @@ RENAME COLUMN `Measurement ID` TO measurement_id;
 
 </details>
 
+I then proceeded to identify any NULLs or blanks, and replaced the blanks with NULLs as I went:
+
+<details>
+	<summary><sub>Expand</sub></summary>
+
+ ```SQL
+# Identifying NULLs, blanks, etc.
+
+SELECT *
+FROM weather_station_data WHERE wet_bulb_temperature IS NULL
+;
+
+UPDATE weather_station_data
+SET wet_bulb_temperature = NULL
+WHERE wet_bulb_temperature = ''
+;
+
+SELECT *
+FROM weather_station_data WHERE humidity =''
+;
+
+SELECT *
+FROM weather_station_data WHERE rain_intensity =''
+;
+
+UPDATE weather_station_data
+SET rain_intensity = NULL
+WHERE rain_intensity = ''
+;
+
+SELECT *
+FROM weather_station_data WHERE interval_rain IS NULL
+;
+
+SELECT *
+FROM weather_station_data WHERE total_rain = ''
+;
+
+UPDATE weather_station_data
+SET total_rain = NULL
+WHERE total_rain = ''
+;
+
+SELECT *
+FROM weather_station_data WHERE precipitation_type = ''
+;
+
+UPDATE weather_station_data
+SET precipitation_type = NULL
+WHERE precipitation_type = ''
+;
+
+SELECT *
+FROM weather_station_data WHERE wind_direction IS NULL
+;
+
+SELECT *
+FROM weather_station_data WHERE wind_speed = ''
+;
+
+SELECT *
+FROM weather_station_data WHERE heading = ''
+;
+
+UPDATE weather_station_data
+SET heading = NULL
+WHERE heading = ''
+;
+```
+ 
+</details>
 
 
 ## Analysis
