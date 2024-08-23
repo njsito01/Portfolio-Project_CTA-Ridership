@@ -4,7 +4,7 @@ Analyzing the effects of weather on ridership for various modes of public transi
 
 ## Introduction
 
-1. How is ridership for different mosdes of public transit affected by different weather conditions?
+1. How is ridership for different modes of public transit affected by different weather conditions?
    - Precipitation, temperature, humidity, solar radiation
 3. Do people utilize different modes depending on those weather conditions?
 4. Are there seasonal trends for different modes? (Does bus usage increase in the summer? Etc.)
@@ -57,7 +57,7 @@ CREATE TABLE cta_daily_boarding AS (
 </details>
  
 
-Next, I identified any fields with the wrong data types, and updated them to appropriate types:
+After creating the "working tables", I started with the table documenting CTA ridership. I identified any fields with the wrong data types, and updated them to appropriate types:
 
 <details>
 	
@@ -84,6 +84,48 @@ MODIFY COLUMN service_date DATE
 
 ```
 </details>
+
+Then, it was time to identify any NULL, blank, negative, or duplicate values
+
+<details>
+	<summary><sub>Expand to see this SQL code</summary>
+
+```SQL
+SELECT *
+FROM cta_daily_boarding
+WHERE bus IS NULL
+	OR bus = ''
+    OR bus < 0
+;
+
+SELECT *
+FROM cta_daily_boarding
+WHERE rail_boardings IS NULL
+	OR rail_boardings = ''
+    OR rail_boardings < 0
+;
+
+SELECT *
+FROM cta_daily_boarding
+WHERE total_rides IS NULL
+	OR total_rides = ''
+    OR total_rides < 0
+;
+
+SELECT *
+FROM (
+	SELECT
+		*,
+		ROW_NUMBER() OVER(PARTITION BY service_date ORDER BY service_date) AS row_cnt
+	FROM cta_daily_boarding
+    ) as row_nums
+WHERE row_cnt > 1
+;
+```
+</details>
+
+
+
 
 My next step was to rename the columns to a more usable format
 
@@ -154,6 +196,7 @@ RENAME COLUMN `Measurement ID` TO measurement_id;
 ```
 
 </details>
+
 
 
 ## Analysis
