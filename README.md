@@ -289,6 +289,185 @@ WHERE heading = ''
  
 </details>
 
+My next step was to normalize the data. I did this by updating dates to the correct format, converting Celcius to Fahrenheit, and updating column data types:
+
+<details>
+	<summary><sub>Expand</sub></summary>
+
+```SQL
+# Normalizing data
+
+SELECT * , STR_TO_DATE(measurement_timestamp, '%m/%d/%Y %r')
+FROM weather_station_data
+ORDER BY station_name, measurement_timestamp
+;
+
+UPDATE weather_station_data
+SET measurement_timestamp = STR_TO_DATE(measurement_timestamp, '%m/%d/%Y %r')
+;
+
+SELECT *, DATE(measurement_timestamp) AS measurement_date
+FROM weather_station_data
+ORDER BY station_name, measurement_timestamp
+;
+
+-- Converting from C to F
+SELECT 
+	air_temperature,
+    ROUND((air_temperature * 9/5) + 32, 1) AS air_temp_f
+FROM weather_station_data
+;
+
+SELECT 
+	wet_bulb_temperature,
+    ROUND((wet_bulb_temperature * 9/5) + 32, 1) AS bulb_temp_f
+FROM weather_station_data
+;
+
+UPDATE weather_station_data
+SET air_temperature = ROUND((air_temperature * 9/5) + 32, 1)
+;
+
+UPDATE weather_station_data
+SET wet_bulb_temperature = ROUND((wet_bulb_temperature * 9/5) + 32, 1)
+;
+
+
+# Updating data types
+
+ALTER TABLE weather_station_data
+MODIFY COLUMN measurement_timestamp DATETIME
+;
+
+ALTER TABLE weather_station_data
+MODIFY COLUMN wet_bulb_temperature DOUBLE
+;
+
+ALTER TABLE weather_station_data
+MODIFY COLUMN wet_bulb_temperature DOUBLE
+;
+
+SELECT DISTINCT rain_intensity
+FROM weather_station_data
+;
+
+ALTER TABLE weather_station_data
+MODIFY COLUMN rain_intensity DOUBLE
+;
+
+SELECT DISTINCT total_rain
+FROM weather_station_data
+;
+
+ALTER TABLE weather_station_data
+MODIFY COLUMN total_rain DOUBLE
+;
+
+SELECT DISTINCT heading
+FROM weather_station_data
+;
+
+SELECT *
+FROM weather_station_data
+WHERE heading =''
+;
+
+ALTER TABLE weather_station_data
+MODIFY COLUMN heading INT
+;
+
+```
+</details>
+
+Part of that process was to convert the different precipitation codes into their descriptions, as well as remove incorrect values:
+
+<details>
+	<summary><sub>Expand</sub></summary>
+
+```SQL
+/*
+Precipitation Type
+0 = No precipitation 
+60 = Liquid precipitation, e.g. rain - Ice, hail and sleet are transmitted as rain (60). 
+70 = Solid precipitation, e.g. snow 
+40 = unspecified precipitation
+*/
+
+SELECT DISTINCT precipitation_type
+FROM weather_station_data
+; -- Results contained '5', which is not listed in the dataset description
+
+SELECT * 
+FROM weather_station_data
+WHERE precipitation_type = '5'
+;
+
+SELECT *
+FROM weather_station_data
+WHERE station_name = 'Oak Street Weather Station'
+	AND measurement_timestamp LIKE '2017-10-03%'
+; 			/*This looks like bad data, I could match it to the '0' values in the same timeframe, 
+			but some other values are also showing '5', when they likely shouldn't. I'll remove this row 
+			from the data, so the other invalid values don't affect the analysis, either */
+                            
+DELETE FROM weather_station_data
+WHERE precipitation_type = '5'
+;
+
+UPDATE weather_station_data
+SET precipitation_type = 'No precipitation'
+WHERE precipitation_type = '0'
+;
+
+UPDATE weather_station_data
+SET precipitation_type = 'Liquid precipitation, e.g. rain - Ice, hail and sleet are transmitted as rain (60)'
+WHERE precipitation_type = '60'
+;
+
+UPDATE weather_station_data
+SET precipitation_type = 'Solid precipitation, e.g. snow'
+WHERE precipitation_type = '70'
+;
+
+UPDATE weather_station_data
+SET precipitation_type = 'unspecified precipitation'
+WHERE precipitation_type = '40'
+;
+
+```
+</details>
+
+From there, it was a matter of generating the tables that would be used for analysis.  The *cta_daily_boarding_v2* table was already cleaned, but the data is tracked daily, whereas the weather data was tracked hourly. In order to compare the two appropriately, I found the average weather figures for each day, and created a view I could use in the analysis:
+
+<details>
+	<summary><sub>Expand</sub></summary>
+
+```SQL
+-- The aggregation - Looking to find general weather condition by the day
+CREATE VIEW daily_weather_avgs AS
+SELECT 
+    DATE(measurement_timestamp) AS measurement_date,
+    ROUND(AVG(air_temperature), 1) AS air_temp,
+    ROUND(AVG(wet_bulb_temperature), 1) AS wet_bulb_temp,
+    ROUND(AVG(humidity), 1) AS humidity,
+    ROUND(AVG(rain_intensity), 1) AS rain_intensity,
+    ROUND(AVG(interval_rain), 1) AS interval_rain,
+    ROUND(AVG(total_rain), 1) AS total_rain,
+    ROUND(AVG(wind_direction), 1) AS wind_direction,
+    ROUND(AVG(wind_speed), 1) AS wind_speed,
+    ROUND(AVG(max_wind_speed), 1) AS max_wind_speed,
+    ROUND(AVG(barometric_pressure), 1) AS barometric_pressure,
+    ROUND(AVG(solar_radiation), 1) AS solar_radiation,
+    ROUND(AVG(heading), 1) AS heading
+FROM weather_station_data
+GROUP BY measurement_date
+ORDER BY measurement_date
+;
+
+```
+</details>
+
+
 
 ## Analysis
 
