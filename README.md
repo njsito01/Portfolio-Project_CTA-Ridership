@@ -14,14 +14,19 @@ Analyzing the effects of weather on ridership for various modes of public transi
 
 ### Data and Tools
 
-You can find the datasets I used here for [CTA Ridership](https://data.cityofchicago.org/Transportation/CTA-Ridership-Daily-Boarding-Totals/6iiy-9s97/about_data)
-and here for [weather](https://data.cityofchicago.org/Parks-Recreation/Beach-Weather-Stations-Automated-Sensors/k7hf-8y75/about_data)
+The following datasets were used in this analysis:
 
+[CTA - Ridership - Daily Boarding Totals](https://data.cityofchicago.org/Transportation/CTA-Ridership-Daily-Boarding-Totals/6iiy-9s97/about_data)
+and
+[Beach Weather Stations - Automated Sensors](https://data.cityofchicago.org/Parks-Recreation/Beach-Weather-Stations-Automated-Sensors/k7hf-8y75/about_data)
+
+ 
 The following tools were used on this analysis:
 - SQL: The language of the code written
 - MySQL Workbench: The environment I interacted with and queried the database from
 - MySQL Server: The database where the dataset was stored
 - Tableau Public: The BI tool used to create the final visualizations and dashboard
+
 
 ### Process
 
