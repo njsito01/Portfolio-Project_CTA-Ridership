@@ -489,46 +489,6 @@ The goal of this analysis is to answer three questions:
 
 The first step was to gain familiarity with the dataset, by joining the two sources of data, then performing a few exploratory queries. 
 
-I first checked the date range covered by joining the two sets of data, and it covers 9 years of data, which should suffice to analyze trends and patterns.  
-
-<details>
-	<summary><sub>Expand</sub></summary>
-    
-```SQL
-# Date range
-
-SELECT 
-	MIN(service_date) AS first_date,
-    MAX(service_date) AS last_date
-FROM cta_daily_boarding_v2 AS cta
-JOIN daily_weather_avgs AS dwa
-	ON cta.service_date = dwa.measurement_date
-;
-```
-</details>
-
-The results of this query are shown here:
-
-|First Date|Last Date|
-|---|---|
-|2015-04-25|2024-04-30|
-
-
-> [!NOTE]
-> The timeframe includes the COVID-19 pandemic.
-> The years of 2020, 2021, and 2022 will be filtered out of many queries in this analysis.
-> If the pandemic was included, the patterns and trends that the questions above look to answer would be severely impacted by factors outside of the scope of this analysis.
-
-
-<details>
-	<summary><sub>Expand</sub></summary>
-    
-```SQL
-
-```
-
-</details>
-
 <details>
 	<summary><sub>Expand</sub></summary>
     
@@ -541,15 +501,50 @@ JOIN daily_weather_avgs AS dwa
 	ON cta.service_date = dwa.measurement_date
 ;
 
+# Date range
+
+SELECT 
+	MIN(service_date) AS first_date,
+    MAX(service_date) AS last_date
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+;
+```
+</details>
+
+I first checked the date range covered by joining the two sets of data, and it covers 9 years of data, which should suffice to analyze trends and patterns.
+The results of this query are shown here:
+
+|First Date|Last Date|
+|:---:|:---:|
+|2015-04-25|2024-04-30|
+
+
+> [!NOTE]
+> The timeframe covers the COVID-19 pandemic.
+> The years of 2020, 2021, and 2022 will be filtered out of many of the following queries.
+> If the pandemic was included, the patterns and trends that the questions above look to answer would be severely impacted by factors outside of the scope of this analysis.
+
+
+Next, I looked to Identify some of the extremes, as a whole, as well as throughout each month.
+
+<details>
+	<summary><sub>Expand</sub></summary>
+    
+```SQL
+# Lowest, Highest, and Average temperatures
+
 # Lowest, Highest, and Average temperatures
 
 SELECT
-MAX(air_temp) AS max_temp,
+	MAX(air_temp) AS max_temp,
     MIN(air_temp) AS min_temp,
     ROUND(AVG(air_temp), 1) AS avg_temp
 FROM cta_daily_boarding_v2 AS cta
 JOIN daily_weather_avgs AS dwa
 	ON cta.service_date = dwa.measurement_date
+WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
 ;
 
 SELECT
@@ -560,13 +555,480 @@ SELECT
 FROM cta_daily_boarding_v2 AS cta
 JOIN daily_weather_avgs AS dwa
 	ON cta.service_date = dwa.measurement_date
+WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
 GROUP BY each_month
 ORDER BY each_month
+;
+
+
+```
+
+</details>
+
+The overall maximum, minimum, and average temperatures:
+
+|max_temp|min_temp|avg_temp|
+|:---:|:---:|:---:|
+|89.1|-14.6|52.7|
+
+A selection from the monthly figures:
+
+|each_month|max_temp|min_temp|avg_temp|
+|:---:|:---:|:---:|:---:|
+|2015-4|44.6|43|43.8|
+|2015-5|73.6|46|64.1|
+|2015-6|79.1|48.2|64.7|
+|2015-7|81.6|58|71.7|
+|2015-8|82.4|61.6|72.2|
+|2015-9|84.9|58.2|70.3|
+|2015-10|67.2|43.6|56.4|
+|2015-11|66.3|23.6|48.6|
+|2015-12|59.4|24.8|41.1|
+|2016-1|45|3.5|28|
+
+
+
+Next, I looked to explore total ridership for both bus and rail, by month, to identify any seasonal patterns or trends
+
+<details>
+	<summary><sub>Expand</sub></summary>
+    
+```SQL
+# Total ridership by month
+
+SELECT
+	CONCAT(YEAR(service_date),'-',MONTH(service_date)) AS each_month,
+    SUM(bus) AS bus_ridership,
+    SUM(rail_boardings) AS rail_ridership
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
+GROUP BY each_month
+ORDER BY each_month
+LIMIT 10
 ;
 
 ```
 </details>
 
+Here's a selection of the results:
+|each_month|bus_ridership|rail_ridership|
+|:---:|:---:|:---:|
+|2015-4|1419971|1253060|
+|2015-5|4488475|3894277|
+|2015-6|23206111|21125032|
+|2015-7|22901148|21926763|
+|2015-8|22218096|20802215|
+|2015-9|23886543|21625824|
+|2015-10|25047871|22663990|
+|2015-11|21655511|19470592|
+|2015-12|21343364|18501324|
+|2016-1|20751116|18164698|
+
+
+My next step was to take a rough look for any correlation between the various weather factors and ridership. I did this by identifying approximate "bands" within which would fall a "low", "medium", or "high" measurement of each respective weather factor, then calculating the count of records and total ridership for each mode that fell within each "band".
+
+#### Temperature
+
+<details>
+	<summary><sub>Expand temperature query</sub></summary>
+
+```SQL
+-- Temperature
+SELECT
+	MAX(air_temp) AS max_temp,
+    MIN(air_temp) AS min_temp,
+    ROUND(AVG(air_temp), 1) AS avg_temp,
+    ROUND(AVG(air_temp) * 0.9, 1) AS middle_band_low,
+    ROUND(AVG(air_temp) * 1.1, 1) AS middle_band_high
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+;
+
+SELECT
+	'Bus Ridership' AS mode_label,
+    SUM(CASE WHEN air_temp > 59 THEN 1 ELSE NULL END) AS high_temp_cnt,
+    ROUND(SUM(CASE WHEN air_temp > 59 THEN bus ELSE NULL END), 1) AS higher_temp_bus_ridership,
+    SUM(CASE WHEN air_temp BETWEEN 48 AND 59 THEN 1 ELSE NULL END) AS middle_temp_cnt,
+    ROUND(SUM(CASE WHEN air_temp BETWEEN 48 AND 59 THEN bus ELSE NULL END), 1) AS middle_temp_bus_ridership,
+    SUM(CASE WHEN air_temp < 48 THEN 1 ELSE NULL END) AS low_temp_cnt,
+    ROUND(SUM(CASE WHEN air_temp < 48 THEN bus ELSE NULL END), 1) AS lower_temp_bus_ridership
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
+UNION
+SELECT
+	'Rail Ridership' AS mode_label,
+    SUM(CASE WHEN air_temp > 59 THEN 1 ELSE NULL END) AS above_avg_temp_cnt,
+    ROUND(SUM(CASE WHEN air_temp > 59 THEN rail_boardings ELSE NULL END), 1) AS higher_temp_rail_ridership,
+    SUM(CASE WHEN air_temp BETWEEN 48 AND 59 THEN 1 ELSE NULL END) AS middle_temp_cnt,
+    ROUND(SUM(CASE WHEN air_temp BETWEEN 48 AND 59 THEN rail_boardings ELSE NULL END), 1) AS middle_temp_rail_ridership,
+    SUM(CASE WHEN air_temp < 48 THEN 1 ELSE NULL END) AS below_avg_temp_cnt,
+    ROUND(SUM(CASE WHEN air_temp < 48 THEN rail_boardings ELSE NULL END), 1) AS lower_temp_rail_ridership
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
+;
+```
+</details>
+
+Results:
+
+|mode_label|high_temp_cnt|higher_temp_ridership|middle_temp_cnt|middle_temp_ridership|low_temp_cnt|lower_temp_ridership|
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+|Bus Ridership	|867	|568869301	|303	|200867238	|896	|535899978|
+|Rail Ridership	|867	|526709790	|303	|175830530	|896	|456893385|
+
+#### Humidity:
+
+<details>
+	<summary><sub>Expand humidity query</sub></summary>
+
+```SQL
+
+-- Humidity
+SELECT
+	MAX(humidity) AS max_humidity,
+    MIN(humidity) AS min_humidity,
+    ROUND(AVG(humidity), 1) AS avg_humidity,
+    ROUND(AVG(humidity)* 0.9, 1)  AS middle_band_low,
+    ROUND(AVG(humidity) * 1.1, 1) AS middle_band_high
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+;
+
+SELECT
+	'Bus Ridership' AS mode_label,
+    SUM(CASE WHEN humidity > 75 THEN 1 ELSE NULL END) AS high_hum_cnt,
+    ROUND(SUM(CASE WHEN humidity > 75 THEN bus ELSE NULL END), 1) AS higher_hum_ridership,
+    SUM(CASE WHEN humidity BETWEEN 61 AND 75 THEN 1 ELSE NULL END) AS middle_hum_cnt,
+    ROUND(SUM(CASE WHEN humidity BETWEEN 61 AND 75 THEN bus ELSE NULL END), 1) AS middle_hum_ridership,
+    SUM(CASE WHEN humidity < 61 THEN 1 ELSE NULL END) AS low_hum_cnt,
+    ROUND(SUM(CASE WHEN humidity < 61 THEN bus ELSE NULL END), 1) AS lower_hum_ridership
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
+UNION
+SELECT
+	'Rail Ridership' AS mode_label,
+    SUM(CASE WHEN humidity > 75 THEN 1 ELSE NULL END) AS above_avg_hum_cnt,
+    ROUND(SUM(CASE WHEN humidity > 75 THEN rail_boardings ELSE NULL END), 1) AS higher_hum_ridership,
+    SUM(CASE WHEN humidity BETWEEN 61 AND 75 THEN 1 ELSE NULL END) AS middle_hum_cnt,
+    ROUND(SUM(CASE WHEN humidity BETWEEN 61 AND 75 THEN rail_boardings ELSE NULL END), 1) AS middle_hum_ridership,
+    SUM(CASE WHEN humidity < 61 THEN 1 ELSE NULL END) AS below_avg_hum_cnt,
+    ROUND(SUM(CASE WHEN humidity < 61 THEN rail_boardings ELSE NULL END), 1) AS lower_hum_ridership
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
+;
+
+```
+
+</details>
+
+Results:
+
+|mode_label	|high_hum_cnt	|higher_hum_ridership	|middle_hum_cnt	|middle_hum_ridership	|low_hum_cnt	|lower_hum_ridership|
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+|Bus Ridership	|699	|448212113	|826	|521804099	|541	|335620305|
+|Rail Ridership	|699	|404101125	|826	|463463004	|541	|291869576|
+
+
+#### Rain Intensity:
+
+<details>
+	<summary><sub>Expand rain intensity query</sub></summary>
+
+```SQL
+-- Rain Intensity
+
+SELECT
+	MAX(rain_intensity) AS max_rain_intensity,
+    MIN(rain_intensity) AS min_rain_intensity,
+    ROUND(AVG(rain_intensity), 1) AS avg_rain_intensity,
+    ROUND(AVG(rain_intensity)* 0.9, 1)  AS middle_band_low,
+    ROUND(AVG(rain_intensity) * 1.1, 1) AS middle_band_high
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+;
+
+SELECT
+	'Bus Ridership' AS mode_label,
+    SUM(CASE WHEN rain_intensity > 0.2 THEN 1 ELSE NULL END) AS high_rain_intensity_cnt,
+    ROUND(SUM(CASE WHEN rain_intensity > 0.2 THEN bus ELSE NULL END), 1) AS higher_rain_intensity_ridership,
+    SUM(CASE WHEN rain_intensity BETWEEN 0.1 AND 0.2 THEN 1 ELSE NULL END) AS middle_rain_intensity_cnt,
+    ROUND(SUM(CASE WHEN rain_intensity BETWEEN 0.1 AND 0.2 THEN bus ELSE NULL END), 1) AS middle_rain_intensity_ridership,
+    SUM(CASE WHEN rain_intensity < 0.1 THEN 1 ELSE NULL END) AS low_rain_intensity_cnt,
+    ROUND(SUM(CASE WHEN rain_intensity < 0.1 THEN bus ELSE NULL END), 1) AS lower_rain_intensity_ridership
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
+UNION
+SELECT
+	'Rail Ridership' AS mode_label,
+    SUM(CASE WHEN rain_intensity > 0.2 THEN 1 ELSE NULL END) AS above_avg_rain_intensity_cnt,
+    ROUND(SUM(CASE WHEN rain_intensity > 0.2 THEN rail_boardings ELSE NULL END), 1) AS higher_rain_intensity_ridership,
+    SUM(CASE WHEN rain_intensity BETWEEN 0.1 AND 0.2 THEN 1 ELSE NULL END) AS middle_rain_intensity_cnt,
+    ROUND(SUM(CASE WHEN rain_intensity BETWEEN 0.1 AND 0.2 THEN rail_boardings ELSE NULL END), 1) AS middle_rain_intensity_ridership,
+    SUM(CASE WHEN rain_intensity < 0.1 THEN 1 ELSE NULL END) AS below_avg_rain_intensity_cnt,
+    ROUND(SUM(CASE WHEN rain_intensity < 0.1 THEN rail_boardings ELSE NULL END), 1) AS lower_rain_intensity_ridership
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
+;
+
+```
+
+</details>
+
+Results:
+
+|mode_label |high_rain_intensity_cnt |higher_rain_intensity_ridership |middle_rain_intensity_cnt |middle_rain_intensity_ridership |low_rain_intensity_cnt |lower_rain_intensity_ridership|
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+|Bus Ridership	|313	|194484769	|210	|128971131	|1543	|982180617|
+|Rail Ridership	|313	|177131034	|210	|114211487	|1543	|868091184|
+
+
+#### Total rain:
+
+<details>
+	<summary><sub>Expand total rain query</sub></summary>
+
+```SQL
+-- Total Rain
+
+SELECT
+	MAX(total_rain) AS max_total_rain,
+    MIN(total_rain) AS min_total_rain,
+    ROUND(AVG(total_rain), 1) AS avg_total_rain,
+    ROUND(AVG(total_rain)* 0.9, 1)  AS middle_band_low,
+    ROUND(AVG(total_rain) * 1.1, 1) AS middle_band_high
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+;
+
+SELECT
+	'Bus Ridership' AS mode_label,
+    SUM(CASE WHEN total_rain > 153 THEN 1 ELSE NULL END) AS high_total_rain_cnt,
+    ROUND(SUM(CASE WHEN total_rain > 153 THEN bus ELSE NULL END), 1) AS higher_total_rain_ridership,
+    SUM(CASE WHEN total_rain BETWEEN 125 AND 153 THEN 1 ELSE NULL END) AS middle_total_rain_cnt,
+    ROUND(SUM(CASE WHEN total_rain BETWEEN 125 AND 153 THEN bus ELSE NULL END), 1) AS middle_total_rain_ridership,
+    SUM(CASE WHEN total_rain < 125 THEN 1 ELSE NULL END) AS low_total_rain_cnt,
+    ROUND(SUM(CASE WHEN total_rain < 125 THEN bus ELSE NULL END), 1) AS lower_total_rain_ridership
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
+UNION
+SELECT
+	'Rail Ridership' AS mode_label,
+    SUM(CASE WHEN total_rain > 153 THEN 1 ELSE NULL END) AS above_avg_total_rain_cnt,
+    ROUND(SUM(CASE WHEN total_rain > 153 THEN rail_boardings ELSE NULL END), 1) AS higher_total_rain_ridership,
+    SUM(CASE WHEN total_rain BETWEEN 125 AND 153 THEN 1 ELSE NULL END) AS middle_total_rain_cnt,
+    ROUND(SUM(CASE WHEN total_rain BETWEEN 125 AND 153 THEN rail_boardings ELSE NULL END), 1) AS middle_total_rain_ridership,
+    SUM(CASE WHEN total_rain < 125 THEN 1 ELSE NULL END) AS below_avg_total_rain_cnt,
+    ROUND(SUM(CASE WHEN total_rain < 125 THEN rail_boardings ELSE NULL END), 1) AS lower_total_rain_ridership
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
+;
+
+```
+
+</details>
+
+Results:
+
+|mode_label |high_total_rain_cnt |higher_total_rain_ridership| middle_total_rain_cnt| middle_total_rain_ridership| low_total_rain_cnt|lower_total_rain_ridership|
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+|Bus Ridership	|640	|426674087	|49	|31171929	|1377	|847790501|
+|Rail Ridership	|640	|397044693	|49	|28461491	|1377	|733927521|
+
+
+#### Wind speed:
+
+<details>
+	<summary><sub>Expand wind speed query</sub></summary>
+
+```SQL
+-- Wind Speed
+
+SELECT
+	MAX(wind_speed) AS max_wind_speed,
+    MIN(wind_speed) AS min_wind_speed,
+    ROUND(AVG(wind_speed), 1) AS avg_wind_speed,
+    ROUND(AVG(wind_speed)* 0.9, 1)  AS middle_band_low,
+    ROUND(AVG(wind_speed) * 1.1, 1) AS middle_band_high
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+;
+
+SELECT
+	'Bus Ridership' AS mode_label,
+    SUM(CASE WHEN wind_speed > 3.2 THEN 1 ELSE NULL END) AS high_wind_speed_cnt,
+    ROUND(SUM(CASE WHEN wind_speed > 3.2 THEN bus ELSE NULL END), 1) AS higher_wind_speed_ridership,
+    SUM(CASE WHEN wind_speed BETWEEN 2.7 AND 3.2 THEN 1 ELSE NULL END) AS middle_wind_speed_cnt,
+    ROUND(SUM(CASE WHEN wind_speed BETWEEN 2.7 AND 3.2 THEN bus ELSE NULL END), 1) AS middle_wind_speed_ridership,
+    SUM(CASE WHEN wind_speed < 2.7 THEN 1 ELSE NULL END) AS low_wind_speed_cnt,
+    ROUND(SUM(CASE WHEN wind_speed < 2.7 THEN bus ELSE NULL END), 1) AS lower_wind_speed_ridership
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
+UNION
+SELECT
+	'Rail Ridership' AS mode_label,
+    SUM(CASE WHEN wind_speed > 3.2 THEN 1 ELSE NULL END) AS above_avg_wind_speed_cnt,
+    ROUND(SUM(CASE WHEN wind_speed > 3.2 THEN rail_boardings ELSE NULL END), 1) AS higher_wind_speed_ridership,
+    SUM(CASE WHEN wind_speed BETWEEN 2.7 AND 3.2 THEN 1 ELSE NULL END) AS middle_wind_speed_cnt,
+    ROUND(SUM(CASE WHEN wind_speed BETWEEN 2.7 AND 3.2 THEN rail_boardings ELSE NULL END), 1) AS middle_wind_speed_ridership,
+    SUM(CASE WHEN wind_speed < 2.7 THEN 1 ELSE NULL END) AS below_avg_wind_speed_cnt,
+    ROUND(SUM(CASE WHEN wind_speed < 2.7 THEN rail_boardings ELSE NULL END), 1) AS lower_wind_speed_ridership
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
+;
+
+```
+
+</details>
+
+Results:
+
+|mode_label|high_wind_speed_cnt|higher_wind_speed_ridership|middle_twind_speed_cnt|middle_wind_speed_ridership|low_wind_speed_cnt|lower_wind_speed_ridership|
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+|Bus Ridership	|637	|423434601	|463	|276064499	|966	|606137417|
+|Rail Ridership	|637	|379566419	|463	|236114046	|966	|543753240|
+
+
+#### Barometric pressure:
+
+<details>
+	<summary><sub>Expand barometric pressure query</sub></summary>
+
+```SQL
+
+-- Barometric Pressure
+
+SELECT
+	MAX(barometric_pressure) AS max_bp,
+    MIN(barometric_pressure) AS min_bp,
+    ROUND(AVG(barometric_pressure), 1) AS avg_bp,
+    ROUND(AVG(barometric_pressure)* 0.9, 1)  AS middle_band_low,
+    ROUND(AVG(barometric_pressure) * 1.1, 1) AS middle_band_high
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+; -- 'Middle band' calculations extend past min and max values
+
+SELECT
+	'Bus Ridership' AS mode_label,
+    SUM(CASE WHEN barometric_pressure > 1000 THEN 1 ELSE NULL END) AS high_bp_cnt,
+    ROUND(SUM(CASE WHEN barometric_pressure > 1000 THEN bus ELSE NULL END), 1) AS higher_bp_ridership,
+    SUM(CASE WHEN barometric_pressure BETWEEN 990 AND 1000 THEN 1 ELSE NULL END) AS middle_bp_cnt,
+    ROUND(SUM(CASE WHEN barometric_pressure BETWEEN 990 AND 1000 THEN bus ELSE NULL END), 1) AS middle_bp_ridership,
+    SUM(CASE WHEN barometric_pressure < 990 THEN 1 ELSE NULL END) AS low_bp_cnt,
+    ROUND(SUM(CASE WHEN barometric_pressure < 990 THEN bus ELSE NULL END), 1) AS lower_bp_ridership
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
+UNION
+SELECT
+	'Rail Ridership' AS mode_label,
+    SUM(CASE WHEN barometric_pressure > 1000 THEN 1 ELSE NULL END) AS above_avg_bp_cnt,
+    ROUND(SUM(CASE WHEN barometric_pressure > 1000 THEN rail_boardings ELSE NULL END), 1) AS higher_bp_ridership,
+    SUM(CASE WHEN barometric_pressure BETWEEN 990 AND 1000 THEN 1 ELSE NULL END) AS middle_bp_cnt,
+    ROUND(SUM(CASE WHEN barometric_pressure BETWEEN 990 AND 1000 THEN rail_boardings ELSE NULL END), 1) AS middle_bp_ridership,
+    SUM(CASE WHEN barometric_pressure < 990 THEN 1 ELSE NULL END) AS below_avg_bp_cnt,
+    ROUND(SUM(CASE WHEN barometric_pressure < 990 THEN rail_boardings ELSE NULL END), 1) AS lower_bp_ridership
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
+;
+
+```
+
+</details>
+
+Results:
+
+|mode_label|high_bp_cnt|higher_bp_ridership|middle_bp_cnt|middle_bp_ridership|low_bp_cnt|lower_bp_ridership|
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+|Bus Ridership	|355	|215773932	|1205	|765821460	|506	|324041125|
+|Rail Ridership	|355	|188189889	|1205	|685212567	|506	|286031249|
+
+
+#### Solar radiation:
+
+<details>
+	<summary><sub>Expand solar radiation query</sub></summary>
+
+```SQL
+-- Solar Radiation
+
+SELECT
+	MAX(solar_radiation) AS max_solar,
+    MIN(solar_radiation) AS min_solar,
+    ROUND(AVG(solar_radiation), 1) AS avg_solar,
+    ROUND(AVG(solar_radiation)* 0.9, 1)  AS middle_band_low,
+    ROUND(AVG(solar_radiation) * 1.1, 1) AS middle_band_high
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+; 
+
+SELECT
+	'Bus Ridership' AS mode_label,
+    SUM(CASE WHEN solar_radiation > 117 THEN 1 ELSE NULL END) AS high_solar_cnt,
+    ROUND(SUM(CASE WHEN solar_radiation > 117 THEN bus ELSE NULL END), 1) AS higher_solar_ridership,
+    SUM(CASE WHEN solar_radiation BETWEEN 95 AND 117 THEN 1 ELSE NULL END) AS middle_solar_cnt,
+    ROUND(SUM(CASE WHEN solar_radiation BETWEEN 95 AND 117 THEN bus ELSE NULL END), 1) AS middle_solar_ridership,
+    SUM(CASE WHEN solar_radiation < 95 THEN 1 ELSE NULL END) AS low_solar_cnt,
+    ROUND(SUM(CASE WHEN solar_radiation < 95 THEN bus ELSE NULL END), 1) AS lower_solar_ridership
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
+UNION
+SELECT
+	'Rail Ridership' AS mode_label,
+    SUM(CASE WHEN solar_radiation > 117 THEN 1 ELSE NULL END) AS above_avg_solar_cnt,
+    ROUND(SUM(CASE WHEN solar_radiation > 117 THEN rail_boardings ELSE NULL END), 1) AS higher_solar_ridership,
+    SUM(CASE WHEN solar_radiation BETWEEN 95 AND 117 THEN 1 ELSE NULL END) AS middle_solar_cnt,
+    ROUND(SUM(CASE WHEN solar_radiation BETWEEN 95 AND 117 THEN rail_boardings ELSE NULL END), 1) AS middle_solar_ridership,
+    SUM(CASE WHEN solar_radiation < 95 THEN 1 ELSE NULL END) AS below_avg_solar_cnt,
+    ROUND(SUM(CASE WHEN solar_radiation < 95 THEN rail_boardings ELSE NULL END), 1) AS lower_solar_ridership
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
+;
+```
+
+</details>
+
+Results:
+
+|mode_label|high_solar_cnt|higher_solar_ridership|middle_solar_cnt|middle_solar_ridership|low_solar_cnt|lower_solar_ridership|
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+|Bus Ridership	|803	|502187599	|188	|127534501	|1075	|675914417|
+|Rail Ridership	|803	|448369919	|188	|115191799	|1075	|595871987|
 
 
 ## Visualization
