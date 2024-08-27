@@ -476,6 +476,98 @@ ORDER BY measurement_date
 
 ## Analysis
 
+### Questions
+
+The goal of this analysis is to answer three questions:
+
+1. How is ridership for different modes of public transit affected by different weather conditions?
+   - Precipitation, temperature, humidity, solar radiation
+3. Do people utilize different modes depending on those weather conditions?
+4. Are there seasonal trends for different modes? (Does bus usage increase in the summer? Etc.)
+
+### Approach
+
+The first step was to gain familiarity with the dataset, by joining the two sources of data, then performing a few exploratory queries. 
+
+I first checked the date range covered by joining the two sets of data, and it covers 9 years of data, which should suffice to analyze trends and patterns.  
+
+<details>
+	<summary><sub>Expand</sub></summary>
+    
+```SQL
+# Date range
+
+SELECT 
+	MIN(service_date) AS first_date,
+    MAX(service_date) AS last_date
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+;
+```
+</details>
+
+The results of this query are shown here:
+
+|First Date|Last Date|
+|---|---|
+|2015-04-25|2024-04-30|
+
+
+> [!NOTE]
+> The timeframe includes the COVID-19 pandemic.
+> The years of 2020, 2021, and 2022 will be filtered out of many queries in this analysis.
+> If the pandemic was included, the patterns and trends that the questions above look to answer would be severely impacted by factors outside of the scope of this analysis.
+
+
+<details>
+	<summary><sub>Expand</sub></summary>
+    
+```SQL
+
+```
+
+</details>
+
+<details>
+	<summary><sub>Expand</sub></summary>
+    
+```SQL
+
+# Joining the data
+SELECT *
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+;
+
+# Lowest, Highest, and Average temperatures
+
+SELECT
+MAX(air_temp) AS max_temp,
+    MIN(air_temp) AS min_temp,
+    ROUND(AVG(air_temp), 1) AS avg_temp
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+;
+
+SELECT
+	CONCAT(YEAR(service_date),'-',MONTH(service_date)) AS each_month,
+	MAX(air_temp) AS max_temp,
+    MIN(air_temp) AS min_temp,
+    ROUND(AVG(air_temp), 1) AS avg_temp
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+GROUP BY each_month
+ORDER BY each_month
+;
+
+```
+</details>
+
+
 
 ## Visualization
 
