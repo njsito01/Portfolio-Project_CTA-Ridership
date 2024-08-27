@@ -1031,6 +1031,106 @@ Results:
 |Rail Ridership	|803	|448369919	|188	|115191799	|1075	|595871987|
 
 
+### Seasonal Trends
+
+Coming back to the monthly ridership totals, I wanted to clarify by season, checking both total number of trips made by each mode, as well as the average for each season:
+
+<details>
+	<summary><sub>Expand</sub></summary>
+
+```SQL
+SELECT
+    MONTH(service_date) AS observation_month,
+    SUM(bus) AS total_bus_ridership,
+    SUM(rail_boardings) AS total_rail_ridership,
+    SUM(total_rides) AS total_ridership
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
+GROUP BY observation_month
+ORDER BY observation_month
+;
+
+SELECT
+    CASE
+		WHEN MONTH(service_date) IN (3, 4, 5) THEN 'Spring'
+        WHEN MONTH(service_date) IN (6, 7, 8) THEN 'Summer'
+        WHEN MONTH(service_date) IN (9, 10, 11) THEN 'Autumn'
+        WHEN MONTH(service_date) IN (12, 1, 2) THEN 'Winter'
+	END AS season,
+    SUM(bus) AS total_bus_ridership,
+    SUM(rail_boardings) AS total_rail_ridership,
+    SUM(total_rides) AS total_ridership
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
+GROUP BY season
+;
+
+
+SELECT
+    CASE
+		WHEN MONTH(service_date) IN (3, 4, 5) THEN 'Spring'
+        WHEN MONTH(service_date) IN (6, 7, 8) THEN 'Summer'
+        WHEN MONTH(service_date) IN (9, 10, 11) THEN 'Autumn'
+        WHEN MONTH(service_date) IN (12, 1, 2) THEN 'Winter'
+	END AS season,
+    ROUND(AVG(bus), 1) AS avg_bus_ridership,
+    ROUND(AVG(rail_boardings), 1) AS avg_rail_ridership,
+    ROUND(AVG(total_rides), 1) AS avg_ridership
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
+GROUP BY season
+;
+```
+ 
+</details>
+
+Total by month:
+
+|observation_month	|total_bus_ridership	|total_rail_ridership	|total_ridership|
+|:---:|:---:|:---:|:---:|
+|1	|101553375	|86214121	|187767496|
+|2	|104189894	|85794873	|189984767|
+|3	|114426276	|96126349	|210552625|
+|4	|111997146	|96185201	|208182347|
+|5	|98567904	|86864390	|185432294|
+|6	|118913077	|111175686	|230088763|
+|7	|115714401	|110425690	|226140091|
+|8	|119227303	|112921675	|232148978|
+|9	|124215218	|112152641	|236367859|
+|10	|108531844	|98572901	|207104745|
+|11	|96999053	|86219611	|183218664|
+|12	|91301026	|76780567	|168081593|
+
+
+
+Total by season:
+
+|season	|total_bus_ridership	|total_rail_ridership	|total_ridership|
+|:---:|:---:|:---:|:---:|
+|Spring	|324991326	|279175940	|604167266|
+|Summer	|353854781	|334523051	|688377832|
+|Autumn	|329746115	|296945153	|626691268|
+|Winter	|297044295	|248789561	|545833856|
+
+
+Average by season:
+
+|season	|avg_bus_ridership	|avg_rail_ridership	|avg_ridership|
+|:---:|:---:|:---:|:---:|
+|Spring	|626187.5	|537911.3	|1164098.8|
+|Summer	|641041.3	|606020.0	|1247061.3|
+|Autumn	|681293.6	|613523.0	|1294816.7|
+|Winter	|581300.0	|486868.0	|1068168.0|
+
+
+
+
 ## Visualization
 
 Please find the produced dashboard [here](https://public.tableau.com/views/PortfolioProject-CTARidershipforDifferentWeatherFactors/CTARidershipDashboard?:language=en-US&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link)
