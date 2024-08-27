@@ -66,16 +66,16 @@ ORDER BY each_month
 # Total ridership by month
 
 SELECT
-	CONCAT(YEAR(service_date),'-',MONTH(service_date)) AS each_month,
-    SUM(bus) AS bus_ridership,
-    SUM(rail_boardings) AS rail_ridership
+    MONTH(service_date) AS observation_month,
+    SUM(bus) AS total_bus_ridership,
+    SUM(rail_boardings) AS total_rail_ridership,
+    SUM(total_rides) AS total_ridership
 FROM cta_daily_boarding_v2 AS cta
 JOIN daily_weather_avgs AS dwa
 	ON cta.service_date = dwa.measurement_date
 WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
-GROUP BY each_month
-ORDER BY each_month
-LIMIT 10
+GROUP BY observation_month
+ORDER BY observation_month
 ;
 
 /*
@@ -388,15 +388,34 @@ JOIN daily_weather_avgs AS dwa
 
 SELECT
     MONTH(service_date) AS observation_month,
-    ROUND(AVG(bus), 1) AS avg_bus_ridership,
-    ROUND(AVG(rail_boardings), 1) AS avg_rail_ridership,
-    ROUND(AVG(total_rides), 1) AS avg_total_ridership
+    SUM(bus) AS total_bus_ridership,
+    SUM(rail_boardings) AS total_rail_ridership,
+    SUM(total_rides) AS total_ridership
 FROM cta_daily_boarding_v2 AS cta
 JOIN daily_weather_avgs AS dwa
 	ON cta.service_date = dwa.measurement_date
 WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
 GROUP BY observation_month
+ORDER BY observation_month
 ;
+
+SELECT
+    CASE
+		WHEN MONTH(service_date) IN (3, 4, 5) THEN 'Spring'
+        WHEN MONTH(service_date) IN (6, 7, 8) THEN 'Summer'
+        WHEN MONTH(service_date) IN (9, 10, 11) THEN 'Autumn'
+        WHEN MONTH(service_date) IN (12, 1, 2) THEN 'Winter'
+	END AS season,
+    SUM(bus) AS total_bus_ridership,
+    SUM(rail_boardings) AS total_rail_ridership,
+    SUM(total_rides) AS total_ridership
+FROM cta_daily_boarding_v2 AS cta
+JOIN daily_weather_avgs AS dwa
+	ON cta.service_date = dwa.measurement_date
+WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
+GROUP BY season
+;
+
 
 SELECT
     CASE
@@ -407,14 +426,13 @@ SELECT
 	END AS season,
     ROUND(AVG(bus), 1) AS avg_bus_ridership,
     ROUND(AVG(rail_boardings), 1) AS avg_rail_ridership,
-    ROUND(AVG(total_rides), 1) AS avg_total_ridership
+    ROUND(AVG(total_rides), 1) AS avg_ridership
 FROM cta_daily_boarding_v2 AS cta
 JOIN daily_weather_avgs AS dwa
 	ON cta.service_date = dwa.measurement_date
 WHERE YEAR(service_date) NOT IN ('2020','2021','2022')
 GROUP BY season
 ;
-
 
 
 
