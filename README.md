@@ -1137,3 +1137,28 @@ Please find the produced dashboard [here](https://public.tableau.com/views/Portf
 
 
 ## Conclusions
+
+### Findings
+
+1. How is ridership for different modes of public transit affected by different weather conditions?
+   - Precipitation, temperature, humidity, solar radiation
+  
+The data shows that there are more rides on buses than on rail, in general.  Additionally, there are more trips made by public transit on days with higher temperatures than lower ones.  However, above 70-75 degrees F, the number of rides begins to drop off.  The data would suggest that the most rides occurr above freezing and below 80 degrees F.
+
+Other weather and environmental factors do not seem to impact the number of riders, in any significant way, as evidenced by low correlation calculated for Total Rain, Humidity, Barometric Press, or Solar Radiation.
+
+
+2. Do people utilize different modes depending on those weather conditions?
+
+The data indicates that regardless of weather condition, overall, more trips are made by bus than by rail.  This could indicate that the bus system is perhaps more robust than the rail system, has more reach, or any other number of factors could explain the difference.
+
+Regardless of the reason for more bus rides, the ridership for each mode follows similar trends. While that doesn't indicate that riders will choose one mode over the other depending on the weather, they both are effected similarly by weather factors.
+
+3. Are there seasonal trends for different modes? (Does bus usage increase in the summer? Etc.)
+
+The number of rides during the the summer months (June, July, August) is higher than the other months of the year. It is worth noting, however, that ridership is not greatly diminished throughout the rest ofthe year. This could indicate that there is a regular base of riders, regardless of the time of year, and during the warmer months, riders who are not part of that regular base will ride it more.
+
+### Recommendations
+
+
+
