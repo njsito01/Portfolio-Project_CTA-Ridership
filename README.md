@@ -1134,6 +1134,8 @@ Average by season:
 
 ## Visualization
 
+![Image of Tableau dashboard](/Assets/CTA Ridership Dashboard.png)
+
 In order to perform the next stage of analysis, I utilized Tableau public to visualize the data.
 
 Through this, it was found that there is not a strong correlation between ridership and the Total Rain, Humidity, Barometric Pressure, or Solar Radiation. We can see that most of the ridership occurs above 30 and 80 degrees F with significant drop-offs outside of that range.  All of the weather factors follow a similar pattern, but that does not indicate that these factors alone promote or discourage ridership.
