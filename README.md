@@ -32,7 +32,7 @@ The following tools were used in this analysis:
 The first step to cleaning the data was to ensure that I did not make any changes to the original data.  To do this, I created two new tables, and named them to both avoid confusion, as well as to be easier to reference.
 
 <details>
-  <summary><sub>Expand for the code used to create new "working tables"</sub></summary>
+  <summary><sub>Expand SQL</sub></summary>
 
 ```SQL
 # Original Data
@@ -65,7 +65,7 @@ After creating the "working tables", I started with the table documenting CTA ri
 
 <details>
 	
-   <summary><sub>Expand for the code used to correct data types</sub></summary>
+   <summary><sub>Expand SQL</sub></summary>
    
   
 ```SQL
@@ -92,7 +92,7 @@ MODIFY COLUMN service_date DATE
 Then, it was time to identify any NULL, blank, negative, or duplicate values
 
 <details>
-	<summary><sub>Expand to see this SQL code</summary>
+	<summary><sub>Expand SQL</summary>
 
 ```SQL
 SELECT *
@@ -131,7 +131,7 @@ WHERE row_cnt > 1
 After identifying some duplicate rows, I created a new "working table" and removed those rows:
 
 <details>
-	<summary><sub>Expand</sub></summary>
+	<summary><sub>Expand SQL</sub></summary>
 
 
 ```SQL
@@ -155,7 +155,7 @@ Next, I moved on to the weather data table, and the first step was to rename the
 
 <details>
 	
-  <summary><sub>Expand to see the code used to update column names</sub></summary>
+  <summary><sub>Expand SQL</sub></summary>
 
 
 ```SQL
@@ -224,7 +224,7 @@ RENAME COLUMN `Measurement ID` TO measurement_id;
 I then proceeded to identify any NULLs or blanks, and replaced the blanks with NULLs as I went:
 
 <details>
-	<summary><sub>Expand</sub></summary>
+	<summary><sub>Expand SQL</sub></summary>
 
  ```SQL
 # Identifying NULLs, blanks, etc.
@@ -296,7 +296,7 @@ WHERE heading = ''
 My next step was to normalize the data. I did this by updating dates to the correct format, converting Celcius to Fahrenheit, and updating column data types:
 
 <details>
-	<summary><sub>Expand</sub></summary>
+	<summary><sub>Expand SQL</sub></summary>
 
 ```SQL
 # Normalizing data
@@ -386,7 +386,7 @@ MODIFY COLUMN heading INT
 Part of that process was to convert the different precipitation codes into their descriptions, as well as remove incorrect values:
 
 <details>
-	<summary><sub>Expand</sub></summary>
+	<summary><sub>Expand SQL</sub></summary>
 
 ```SQL
 /*
@@ -444,7 +444,7 @@ WHERE precipitation_type = '40'
 From there, it was a matter of generating the tables that would be used for analysis.  The *cta_daily_boarding_v2* table was already cleaned, but the data is tracked daily, whereas the weather data was tracked hourly. In order to compare the two appropriately, I found the average weather figures for each day, and created a view I could use in the analysis:
 
 <details>
-	<summary><sub>Expand</sub></summary>
+	<summary><sub>Expand SQL</sub></summary>
 
 ```SQL
 -- The aggregation - Looking to find general weather condition by the day
@@ -489,7 +489,7 @@ To re-iterate, the goal of this analysis is to answer three questions:
 The first step was to gain familiarity with the dataset, by joining the two sources of data, then performing a few exploratory queries. 
 
 <details>
-	<summary><sub>Expand</sub></summary>
+	<summary><sub>Expand SQL</sub></summary>
     
 ```SQL
 
@@ -529,7 +529,7 @@ The results of this query are shown here:
 Next, I looked to Identify some of the extremes, as a whole, as well as throughout each month.
 
 <details>
-	<summary><sub>Expand</sub></summary>
+	<summary><sub>Expand SQL</sub></summary>
     
 ```SQL
 # Lowest, Highest, and Average temperatures
@@ -590,7 +590,7 @@ A selection from the monthly figures:
 Next, I looked to explore total ridership for both bus and rail, by month, to identify any seasonal patterns or trends
 
 <details>
-	<summary><sub>Expand</sub></summary>
+	<summary><sub>Expand SQL</sub></summary>
     
 ```SQL
 # Total ridership by month
@@ -1035,7 +1035,7 @@ Results:
 Coming back to the monthly ridership totals, I wanted to clarify by season, checking both total number of trips made by each mode, as well as the average for each season:
 
 <details>
-	<summary><sub>Expand</sub></summary>
+	<summary><sub>Expand SQL</sub></summary>
 
 ```SQL
 SELECT
