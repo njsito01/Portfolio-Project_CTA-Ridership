@@ -1,6 +1,4 @@
 # Portfolio Project - CTA Ridership
-Analyzing the effects of weather on ridership for various modes of public transit
-
 
 ## Introduction
 
@@ -1134,7 +1132,7 @@ Average by season:
 
 ## Visualization
 
-![Image of Tableau dashboard](Assets/CTA Ridership Dashboard.png)
+![Image of Tableau dashboard](Assets/CTA_Ridership_Dashboard.png)
 
 In order to perform the next stage of analysis, I utilized Tableau public to visualize the data.
 
