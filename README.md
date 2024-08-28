@@ -1161,7 +1161,7 @@ Regardless of the reason for more bus rides, the ridership for each mode follows
 
 **3. Are there seasonal trends for different modes? (Does bus usage increase in the summer? Etc.)**
 
-The number of rides during the the summer months (June, July, August) is higher than the other months of the year. It is worth noting, however, that ridership is not greatly diminished throughout the rest ofthe year. This could indicate that there is a regular base of riders, regardless of the time of year, and during the warmer months, riders who are not part of that regular base will ride it more.
+The number of rides during the the summer months (June, July, August) is higher than the other months of the year. It is worth noting, however, that ridership is not greatly diminished throughout the rest of the year. This could indicate that there is a regular base of riders, regardless of the time of year - and during the warmer months, riders who are not part of that regular base will ride it more.
 
 ### Recommendations
 
