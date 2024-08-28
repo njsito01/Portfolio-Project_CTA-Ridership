@@ -1134,7 +1134,7 @@ Average by season:
 
 ## Visualization
 
-![Image of Tableau dashboard](/Assets/CTA Ridership Dashboard.png)
+![Image of Tableau dashboard](Assets/CTA Ridership Dashboard.png)
 
 In order to perform the next stage of analysis, I utilized Tableau public to visualize the data.
 
