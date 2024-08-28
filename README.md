@@ -4,6 +4,8 @@ Analyzing the effects of weather on ridership for various modes of public transi
 
 ## Introduction
 
+This project was performed with the goal of analyzing the effects of various weather factors on ridership of public transit. In order to evaluate this, three questions were asked:
+
 1. How is ridership for different modes of public transit affected by different weather conditions?
    - Precipitation, temperature, humidity, solar radiation
 3. Do people utilize different modes depending on those weather conditions?
@@ -14,14 +16,13 @@ Analyzing the effects of weather on ridership for various modes of public transi
 
 ### Data and Tools
 
-The following datasets were used in this analysis:
+The datasets used in this analysis were procured from the City of Chicago, and can be found here:
 
-[CTA - Ridership - Daily Boarding Totals](https://data.cityofchicago.org/Transportation/CTA-Ridership-Daily-Boarding-Totals/6iiy-9s97/about_data)
-and
-[Beach Weather Stations - Automated Sensors](https://data.cityofchicago.org/Parks-Recreation/Beach-Weather-Stations-Automated-Sensors/k7hf-8y75/about_data)
+- [CTA - Ridership - Daily Boarding Totals](https://data.cityofchicago.org/Transportation/CTA-Ridership-Daily-Boarding-Totals/6iiy-9s97/about_data)
+- [Beach Weather Stations - Automated Sensors](https://data.cityofchicago.org/Parks-Recreation/Beach-Weather-Stations-Automated-Sensors/k7hf-8y75/about_data)
 
  
-The following tools were used on this analysis:
+The following tools were used in this analysis:
 - SQL: The language of the code written
 - MySQL Workbench: The environment I interacted with and queried the database from
 - MySQL Server: The database where the dataset was stored
@@ -30,7 +31,7 @@ The following tools were used on this analysis:
 
 ### Process
 
-My first step to cleaning the data was to ensure that I did not make any changes to the original data.  To do this, I created two new tables, and named them to both avoid confusion, as well as to be easier to reference.
+The first step to cleaning the data was to ensure that I did not make any changes to the original data.  To do this, I created two new tables, and named them to both avoid confusion, as well as to be easier to reference.
 
 <details>
   <summary><sub>Expand for the code used to create new "working tables"</sub></summary>
@@ -478,7 +479,7 @@ ORDER BY measurement_date
 
 ### Questions
 
-The goal of this analysis is to answer three questions:
+To re-iterate, the goal of this analysis is to answer three questions:
 
 1. How is ridership for different modes of public transit affected by different weather conditions?
    - Precipitation, temperature, humidity, solar radiation
@@ -1133,6 +1134,10 @@ Average by season:
 
 ## Visualization
 
+In order to perform the next stage of analysis, I utilized Tableau public to visualize the data.
+
+Through this, it was found that there is not a strong correlation between ridership and the Total Rain, Humidity, Barometric Pressure, or Solar Radiation. We can see that most of the ridership occurs above 30 and 80 degrees F with significant drop-offs outside of that range.  All of the weather factors follow a similar pattern, but that does not indicate that these factors alone promote or discourage ridership.
+
 Please find the produced dashboard [here](https://public.tableau.com/views/PortfolioProject-CTARidershipforDifferentWeatherFactors/CTARidershipDashboard?:language=en-US&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link)
 
 
@@ -1140,25 +1145,30 @@ Please find the produced dashboard [here](https://public.tableau.com/views/Portf
 
 ### Findings
 
-1. How is ridership for different modes of public transit affected by different weather conditions?
-   - Precipitation, temperature, humidity, solar radiation
+**1. How is ridership for different modes of public transit affected by different weather conditions?**
+   **- Precipitation, temperature, humidity, solar radiation**
   
 The data shows that there are more rides on buses than on rail, in general.  Additionally, there are more trips made by public transit on days with higher temperatures than lower ones.  However, above 70-75 degrees F, the number of rides begins to drop off.  The data would suggest that the most rides occurr above freezing and below 80 degrees F.
 
 Other weather and environmental factors do not seem to impact the number of riders, in any significant way, as evidenced by low correlation calculated for Total Rain, Humidity, Barometric Press, or Solar Radiation.
 
 
-2. Do people utilize different modes depending on those weather conditions?
+**2. Do people utilize different modes depending on those weather conditions?**
 
 The data indicates that regardless of weather condition, overall, more trips are made by bus than by rail.  This could indicate that the bus system is perhaps more robust than the rail system, has more reach, or any other number of factors could explain the difference.
 
 Regardless of the reason for more bus rides, the ridership for each mode follows similar trends. While that doesn't indicate that riders will choose one mode over the other depending on the weather, they both are effected similarly by weather factors.
 
-3. Are there seasonal trends for different modes? (Does bus usage increase in the summer? Etc.)
+**3. Are there seasonal trends for different modes? (Does bus usage increase in the summer? Etc.)**
 
 The number of rides during the the summer months (June, July, August) is higher than the other months of the year. It is worth noting, however, that ridership is not greatly diminished throughout the rest ofthe year. This could indicate that there is a regular base of riders, regardless of the time of year, and during the warmer months, riders who are not part of that regular base will ride it more.
 
 ### Recommendations
 
+- Perform deeper analysis to determine whether the individual weather factors follow similar patterns based on time of year, that is, whether they occur independent of each other
+- Perform a survey to further explore people's reasons for riding
+- Through that same survey, expand on which factors _do_ affect their likelihood to use public transit
+
+### Thank You
 
 
