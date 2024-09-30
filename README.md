@@ -532,7 +532,6 @@ Next, I looked to Identify some of the extremes, as a whole, as well as througho
 	<summary><sub>Expand SQL</sub></summary>
     
 ```SQL
-# Lowest, Highest, and Average temperatures
 
 # Lowest, Highest, and Average temperatures
 
