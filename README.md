@@ -6,7 +6,7 @@ This project was performed with the goal of analyzing the effects of various wea
 
 1. How is ridership for different modes of public transit affected by different weather conditions?
    - Precipitation, temperature, humidity, solar radiation
-3. Do people utilize different modes depending on those weather conditions?
+3. Do riders utilize different modes depending on those weather conditions?
 4. Are there seasonal trends for different modes? (Does bus usage increase in the summer? Etc.)
 
 ## Preparation & Data Cleaning
